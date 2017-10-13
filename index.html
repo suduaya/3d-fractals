@@ -1,0 +1,206 @@
+<html>
+
+<head>
+<title>Projecto</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript" src="math.js"></script>
+<script type="text/javascript" src="models.js"></script>
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec3 LightingDirection;
+    varying vec3 AmbientColor;
+    varying vec3 VN; //vertex normal
+    varying mat3 NMatrix;
+    varying vec3 DirectionalColor;
+    void main(void) {
+        vec3 vLightWeighting;
+        vec3 transformedNormal = NMatrix * VN;
+        float directionalLightWeighting = max(dot(transformedNormal, LightingDirection), 0.0);
+        
+        vLightWeighting = AmbientColor + DirectionalColor * directionalLightWeighting;
+    
+        gl_FragColor = vec4((1.0,1.0,1.0,1.0) * vLightWeighting, 1);
+    }
+</script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec3 aVertexNormal;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat3 uNMatrix;
+
+    uniform vec3 uAmbientColor;
+
+    uniform vec3 uLightingDirection;
+    uniform vec3 uDirectionalColor;
+
+    uniform bool uUseLighting;
+
+    varying vec3 LightingDirection;
+    varying vec3 VN;
+    varying mat3 NMatrix;
+    varying vec3 DirectionalColor;
+    varying vec3 AmbientColor;
+    void main(void) {
+        NMatrix = uNMatrix;
+        VN = aVertexNormal;
+        LightingDirection = uLightingDirection; 
+        DirectionalColor = uDirectionalColor;
+        AmbientColor = uAmbientColor;
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    }
+</script>
+
+<script type="text/javascript" src="proj.js"></script>
+<style type="text/css">
+    div.container {
+    width: 100%;
+    /*border: 1px solid gray;*/
+    background-image: url("simple_background_that_will_give_us_20.jpg");
+}
+
+header, footer {
+    padding: 1em;
+    color: white;
+    background-color: black;
+    clear: left;
+    text-align: center;
+}
+
+nav {
+    
+    float: left;
+    max-width: 50%;
+    margin: 0;
+    padding: 1em;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+   
+nav ul a {
+    text-decoration: none;
+}
+
+article {
+    margin-left: 170px;
+    border-left: 1px solid gray;
+    padding: 1em;
+    overflow: hidden;
+}
+</style>
+
+
+</head>
+
+
+<body onload="webGLStart();">
+<div class="container">
+    <header>
+        <h1>Welcome to Fractal town - CV 2016/2017</h1>
+    </header>
+    <nav>
+        <br/>
+            Use <code>+</code>/<code>-</code> to increase/decrease recursive levels
+        <br/>
+        <br>
+            Drag the <code>mouse</code> on the fractal to spin
+        <br/>
+
+    
+    <h2>Directional light:</h2>
+
+    <table style="border: 0; padding: 10px;">
+        <tr>
+            <td><b>Direction:</b>
+            <td>X: <input type="text" id="lightDirectionX" value="0.0" />
+            <td>Y: <input type="text" id="lightDirectionY" value="0.0" />
+            <td>Z: <input type="text" id="lightDirectionZ" value="1.0" />
+        </tr>
+        <tr>
+            <td><b>Colour:</b>
+            <td>R: <input type="text" id="directionalR" value="0.2" />
+            <td>G: <input type="text" id="directionalG" value="0.2" />
+            <td>B: <input type="text" id="directionalB" value="0.2" />
+        </tr>
+    </table>
+
+    <h2>Ambient light:</h2>
+    <table style="border: 0; padding: 10px;">
+        <tr>
+            <td><b>Colour:</b>
+            <td>R: <input type="text" id="ambientR" value="0.2" />
+            <td>G: <input type="text" id="ambientG" value="0.2" />
+            <td>B: <input type="text" id="ambientB" value="0.2" />
+        </tr>
+    </table>
+    <table style="border: 0; padding: 10px;">
+        <p>Rotation on X: 
+            
+        <button id="XX-on-off-button">On / Off</button>
+
+        <button id="XX-direction-button">Change Direction</button>
+
+        <button id="XX-slower-button">Slower</button>
+
+        <button id="XX-faster-button">Faster</button>
+
+        </p>
+        
+        <p>Rotation on Y: 
+            
+        <button id="YY-on-off-button">On / Off</button>
+
+        <button id="YY-direction-button">Change Direction</button>
+
+        <button id="YY-slower-button">Slower</button>
+
+        <button id="YY-faster-button">Faster</button>
+
+        </p>
+        
+        <p>Rotation on Z: 
+            
+        <button id="ZZ-on-off-button">On / Off</button>
+
+        <button id="ZZ-direction-button">Change Direction</button>
+
+        <button id="ZZ-slower-button">Slower</button>
+
+        <button id="ZZ-faster-button">Faster</button>
+
+        </p>
+        
+        
+        <button id="move-downscale-button">Downscale</button>
+        
+        <button id="move-scale-button">Scale</button>
+
+    </table>
+    </nav>
+    <article>
+    <p>Choose the <b>Fractal</b>:
+        
+        <select id="fractal">
+            <option value="0">Sierpinski pyramid</option>
+            <option value="1">Koch Snowflake 3D</option>
+            <option value="2">Menger Sponger</option>
+            <option value="3">Xadrez 3D</option>
+        </select>
+        
+        </p>
+    <canvas id="AACanvas" style="border: none;" width="500" height="500"></canvas>
+    
+    </article>
+    <footer>&Aacutelvaro Martins 72447 &amp&amp Andr&eacute Nascimento 73152</footer>
+</div>
+</body>
+
+</html>
